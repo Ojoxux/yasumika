@@ -1,0 +1,18 @@
+cabal-version:      3.0
+name:               discord-hello
+version:            0.1.0.0
+synopsis:           A minimal Discord bot using discord-haskell
+license:            MIT
+license-file:       LICENSE
+author:             You
+build-type:         Simple
+
+executable discord-hello
+  main-is:          Main.hs
+  hs-source-dirs:   app
+  default-language: GHC2021
+  ghc-options:      -Wall
+  build-depends:
+      base >=4.14 && <5
+    , discord-haskell
+    , text

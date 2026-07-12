@@ -1,5 +1,5 @@
 {
-  description = "A minimal Discord bot written in Haskell";
+  description = "今日休みか教えてくれる君 — Discord school/holiday notifier";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
@@ -17,7 +17,7 @@
           # Haddock is useful for libraries, but adds a very large closure to this
           # small executable.  Keep the first build focused on compiling the bot.
           default = pkgs.haskell.lib.dontHaddock (
-            pkgs.haskellPackages.callCabal2nix "discord-hello" ./. { }
+            pkgs.haskellPackages.callCabal2nix "yasumi" ./. { }
           );
         });
 
@@ -30,6 +30,7 @@
           default = pkgs.haskellPackages.shellFor {
             packages = _: [ project ];
             buildInputs = with pkgs; [
+              awscli2
               cabal-install
             ];
           };

@@ -1,0 +1,15 @@
+#!/bin/sh
+set -euo pipefail
+
+while true; do
+  HEADERS="$(mktemp)"
+  curl -sS -LD "$HEADERS" -X GET "${AWS_LAMBDA_RUNTIME_API}/2018-06-01/runtime/invocation/next" > /dev/null
+  REQUEST_ID=$(grep -Fi Lambda-Runtime-Aws-Request-Id "$HEADERS" | tr -d '[:space:]' | cut -d: -f2)
+  rm -f "$HEADERS"
+
+  "${LAMBDA_TASK_ROOT}/yasumi"
+
+  curl -sS -X POST "${AWS_LAMBDA_RUNTIME_API}/2018-06-01/runtime/invocation/${REQUEST_ID}/response" \
+    -H "Content-Type: application/json" \
+    -d '{}'
+done

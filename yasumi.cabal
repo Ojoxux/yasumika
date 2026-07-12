@@ -1,0 +1,52 @@
+cabal-version: 3.0
+name:          yasumi
+version:       0.1.0.0
+build-type:    Simple
+
+library
+  hs-source-dirs:   app
+  exposed-modules:  Calendar, Env
+  default-language: GHC2021
+  build-depends:
+      aeson
+    , base
+    , bytestring
+    , japanese-holidays
+    , text
+    , time
+
+executable health-check
+  main-is:          Main.hs
+  hs-source-dirs:   exe/health-check
+  default-language: GHC2021
+  build-depends:
+      base
+    , discord-haskell
+    , text
+    , yasumi
+
+executable yasumi
+  main-is:          Main.hs
+  hs-source-dirs:   exe/yasumi
+  default-language: GHC2021
+  build-depends:
+      aeson
+    , base
+    , bytestring
+    , http-client
+    , http-client-tls
+    , http-types
+    , text
+    , yasumi
+
+test-suite calendar-tests
+  type:             exitcode-stdio-1.0
+  main-is:          CalendarSpec.hs
+  hs-source-dirs:   test
+  default-language: GHC2021
+  build-depends:
+      base
+    , japanese-holidays
+    , text
+    , time
+    , yasumi

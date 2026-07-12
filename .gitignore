@@ -1,5 +1,8 @@
+docs/
 dist-newstyle/
 result
 result-*
 .direnv/
+.env
 *.env
+!.env.example

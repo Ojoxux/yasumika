@@ -21,7 +21,7 @@ COPY data ./data
 
 RUN mkdir -p /out \
   && cabal update \
-  && cabal build yasumi --enable-optimization=2 \
+  && cabal build exe:yasumi --enable-optimization=2 \
   && cp "$(find dist-newstyle/build -type f -path '*/x/yasumi/*/build/yasumi/yasumi' -print -quit)" /out/yasumi \
   && chmod +x /out/yasumi
 

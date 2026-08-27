@@ -6,3 +6,5 @@ result-*
 .env
 *.env
 !.env.example
+worker/node_modules/
+worker/.wrangler/

@@ -3,7 +3,7 @@
 
 module Main (main) where
 
-import Calendar (getTodayJST, loadCalendar, todayMessage)
+import Calendar (getTodayJST, isDayOff, loadCalendar, todayMessage)
 import Control.Exception (throwIO)
 import Data.Aeson (ToJSON, encode)
 import Data.ByteString.Char8 (pack)
@@ -19,16 +19,19 @@ main :: IO ()
 main = do
   day <- getTodayJST
   cfg <- loadCalendar
-  let message = todayMessage day cfg
 
-  dryRun <- envFlag "DRY_RUN"
-  if dryRun
-    then TIO.putStrLn $ "dry-run: " <> message
+  if isDayOff day cfg
+    then TIO.putStrLn "skipped: 休みのため投稿なし"
     else do
-      token <- requireEnv "DISCORD_BOT_TOKEN"
-      channelId <- requireEnv "DISCORD_CHANNEL_ID"
-      sendDiscordMessage token channelId message
-      TIO.putStrLn $ "posted: " <> message
+      let message = todayMessage day cfg
+      dryRun <- envFlag "DRY_RUN"
+      if dryRun
+        then TIO.putStrLn $ "dry-run: " <> message
+        else do
+          token <- requireEnv "DISCORD_BOT_TOKEN"
+          channelId <- requireEnv "DISCORD_CHANNEL_ID"
+          sendDiscordMessage token channelId message
+          TIO.putStrLn $ "posted: " <> message
 
 data CreateMessageBody = CreateMessageBody
   { content :: T.Text

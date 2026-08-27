@@ -1,9 +1,18 @@
 {
-  "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "yasumi-calendar",
-  "main": "src/index.ts",
-  "compatibility_date": "2026-08-27",
-  "routes": [
-    { "pattern": "yasumi.ojoxux.com", "custom_domain": true }
-  ]
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "yasumi-calendar",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-08-27",
+	"routes": [
+		{
+			"pattern": "yasumi.ojoxux.com",
+			"custom_domain": true
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "CALENDAR_KV",
+			"id": "d0d07e4312784cda87a52f6756fc50d1"
+		}
+	]
 }

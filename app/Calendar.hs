@@ -4,6 +4,7 @@
 module Calendar
   ( CalendarConfig (..)
   , DayEntry (..)
+  , emptyCalendarConfig
   , getTodayJST
   , isDayOff
   , loadCalendar
@@ -54,6 +55,9 @@ getTodayJST :: IO Day
 getTodayJST = do
   now <- getCurrentTime
   pure . localDay $ utcToLocalTime jstTimeZone now
+
+emptyCalendarConfig :: CalendarConfig
+emptyCalendarConfig = CalendarConfig {closedDates = [], openDates = []}
 
 loadCalendar :: IO CalendarConfig
 loadCalendar = do

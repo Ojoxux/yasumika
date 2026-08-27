@@ -11,6 +11,9 @@ library
       aeson
     , base
     , bytestring
+    , http-client
+    , http-client-tls
+    , http-types
     , japanese-holidays
     , text
     , time

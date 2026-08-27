@@ -5,6 +5,7 @@ module Main (main) where
 import Calendar
   ( CalendarConfig (..)
   , DayEntry (..)
+  , emptyCalendarConfig
   , isDayOff
   , readDay
   , todayMessage
@@ -33,6 +34,8 @@ main =
       , [ "message for school day" | todayMessage day20260707 cfg /= "今日は学校っす" ]
       , [ "message for holiday" | todayMessage day20260706 cfg /= "今日は休みっす" ]
       , [ "readDay parses YYYY-MM-DD" | readDay "2026-07-06" /= Just day20260706 ]
+      , [ "empty config: Sunday should be off" | not (isDayOff day20260712 emptyCalendarConfig) ]
+      , [ "empty config: weekday without holiday should be school" | isDayOff day20260707 emptyCalendarConfig ]
       ]
 
 cfg :: CalendarConfig

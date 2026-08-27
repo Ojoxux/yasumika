@@ -15,7 +15,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260827.1",
     "typescript": "^7.0.2",

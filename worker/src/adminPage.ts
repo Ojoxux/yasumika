@@ -4,84 +4,189 @@ export const adminPageHtml = `<!doctype html>
 <meta charset="utf-8">
 <title>カレンダー編集</title>
 <style>
-  body { font-family: sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
-  th, td { border: 1px solid #ccc; padding: 0.4rem; text-align: left; }
-  h2 { margin-top: 2rem; }
-  button { cursor: pointer; }
+  body {
+    font-family: sans-serif;
+    max-width: 420px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+  h1 { font-size: 1.2rem; }
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 1rem 0;
+  }
+  .nav button {
+    cursor: pointer;
+    padding: 0.4rem 0.8rem;
+  }
+  #month-label { font-weight: bold; font-size: 1.1rem; }
+  .calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .weekday {
+    text-align: center;
+    font-weight: bold;
+    padding: 0.3rem 0;
+    font-size: 0.85rem;
+  }
+  .weekday.sun { color: #e53e3e; }
+  .weekday.sat { color: #2b6cb0; }
+  .day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.95rem;
+  }
+  .day:hover { background: #f0f0f0; }
+  .day.empty { border: none; cursor: default; visibility: hidden; }
+  .day.sun { color: #e53e3e; }
+  .day.sat { color: #2b6cb0; }
+  .day.closed {
+    background: #ffdde0;
+    border-color: #e0526b;
+    font-weight: bold;
+  }
+  .day.closed:hover { background: #ffc9cf; }
+  .legend {
+    margin-top: 0.8rem;
+    font-size: 0.85rem;
+    color: #555;
+  }
+  .legend span.sample {
+    display: inline-block;
+    width: 0.9rem;
+    height: 0.9rem;
+    background: #ffdde0;
+    border: 1px solid #e0526b;
+    border-radius: 3px;
+    vertical-align: middle;
+    margin-right: 0.3rem;
+  }
+  #save-row {
+    margin-top: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  #save { cursor: pointer; padding: 0.5rem 1rem; }
 </style>
 </head>
 <body>
-<h1>カレンダー編集</h1>
+<h1>休みのカレンダー編集</h1>
 
-<h2>休みの日 (closedDates)</h2>
-<table id="closed-table"><tbody></tbody></table>
-<button id="add-closed">+ 追加</button>
+<div class="nav">
+  <button id="prev">← 前の月</button>
+  <span id="month-label"></span>
+  <button id="next">次の月 →</button>
+</div>
 
-<h2>出勤の日 (openDates)</h2>
-<table id="open-table"><tbody></tbody></table>
-<button id="add-open">+ 追加</button>
+<div id="calendar" class="calendar"></div>
 
-<p><button id="save">保存</button> <span id="status"></span></p>
+<p class="legend"><span class="sample"></span>クリックで休み登録・解除できます</p>
+
+<div id="save-row">
+  <button id="save">保存</button>
+  <span id="status"></span>
+</div>
 
 <script>
 let state = { closedDates: [], openDates: [] };
+let viewYear;
+let viewMonth;
 
-async function load() {
-  const res = await fetch("/admin/api/calendar");
-  state = await res.json();
-  render();
+function pad(n) {
+  return String(n).padStart(2, "0");
 }
 
-function render() {
-  renderTable("closed-table", state.closedDates);
-  renderTable("open-table", state.openDates);
+function toDateKey(y, m, d) {
+  return y + "-" + pad(m + 1) + "-" + pad(d);
 }
 
-function renderTable(tableId, entries) {
-  const tbody = document.getElementById(tableId).querySelector("tbody");
-  tbody.innerHTML = "";
-  entries.forEach((entry, index) => {
-    const tr = document.createElement("tr");
+function findClosedIndex(dateKey) {
+  return state.closedDates.findIndex((entry) => entry.date === dateKey);
+}
 
-    const dateTd = document.createElement("td");
-    const dateInput = document.createElement("input");
-    dateInput.type = "date";
-    dateInput.value = entry.date;
-    dateInput.addEventListener("change", () => { entry.date = dateInput.value; });
-    dateTd.appendChild(dateInput);
+function toggleDate(dateKey) {
+  const index = findClosedIndex(dateKey);
+  if (index >= 0) {
+    state.closedDates.splice(index, 1);
+  } else {
+    state.closedDates.push({ date: dateKey, label: "休み" });
+  }
+  renderCalendar();
+}
 
-    const labelTd = document.createElement("td");
-    const labelInput = document.createElement("input");
-    labelInput.type = "text";
-    labelInput.value = entry.label;
-    labelInput.addEventListener("change", () => { entry.label = labelInput.value; });
-    labelTd.appendChild(labelInput);
+function renderCalendar() {
+  const calendar = document.getElementById("calendar");
+  calendar.innerHTML = "";
 
-    const actionTd = document.createElement("td");
-    const removeBtn = document.createElement("button");
-    removeBtn.textContent = "削除";
-    removeBtn.addEventListener("click", () => {
-      entries.splice(index, 1);
-      render();
-    });
-    actionTd.appendChild(removeBtn);
-
-    tr.appendChild(dateTd);
-    tr.appendChild(labelTd);
-    tr.appendChild(actionTd);
-    tbody.appendChild(tr);
+  const weekdayNames = ["日", "月", "火", "水", "木", "金", "土"];
+  weekdayNames.forEach((name, i) => {
+    const cell = document.createElement("div");
+    cell.className = "weekday" + (i === 0 ? " sun" : "") + (i === 6 ? " sat" : "");
+    cell.textContent = name;
+    calendar.appendChild(cell);
   });
+
+  const firstDay = new Date(viewYear, viewMonth, 1);
+  const startWeekday = firstDay.getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+
+  for (let i = 0; i < startWeekday; i++) {
+    const cell = document.createElement("div");
+    cell.className = "day empty";
+    calendar.appendChild(cell);
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateKey = toDateKey(viewYear, viewMonth, d);
+    const weekday = new Date(viewYear, viewMonth, d).getDay();
+    const entryIndex = findClosedIndex(dateKey);
+
+    const cell = document.createElement("div");
+    cell.className =
+      "day" +
+      (weekday === 0 ? " sun" : "") +
+      (weekday === 6 ? " sat" : "") +
+      (entryIndex >= 0 ? " closed" : "");
+    cell.textContent = String(d);
+
+    if (entryIndex >= 0 && state.closedDates[entryIndex].label !== "休み") {
+      cell.title = state.closedDates[entryIndex].label;
+    }
+
+    cell.addEventListener("click", () => toggleDate(dateKey));
+    calendar.appendChild(cell);
+  }
+
+  document.getElementById("month-label").textContent = viewYear + "年" + (viewMonth + 1) + "月";
 }
 
-document.getElementById("add-closed").addEventListener("click", () => {
-  state.closedDates.push({ date: new Date().toISOString().slice(0, 10), label: "休み" });
-  render();
+document.getElementById("prev").addEventListener("click", () => {
+  viewMonth -= 1;
+  if (viewMonth < 0) {
+    viewMonth = 11;
+    viewYear -= 1;
+  }
+  renderCalendar();
 });
 
-document.getElementById("add-open").addEventListener("click", () => {
-  state.openDates.push({ date: new Date().toISOString().slice(0, 10), label: "出勤" });
-  render();
+document.getElementById("next").addEventListener("click", () => {
+  viewMonth += 1;
+  if (viewMonth > 11) {
+    viewMonth = 0;
+    viewYear += 1;
+  }
+  renderCalendar();
 });
 
 document.getElementById("save").addEventListener("click", async () => {
@@ -99,6 +204,15 @@ document.getElementById("save").addEventListener("click", async () => {
     statusEl.textContent = "エラー: " + text;
   }
 });
+
+async function load() {
+  const res = await fetch("/admin/api/calendar");
+  state = await res.json();
+  const today = new Date();
+  viewYear = today.getFullYear();
+  viewMonth = today.getMonth();
+  renderCalendar();
+}
 
 load();
 </script>
